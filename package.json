@@ -1,0 +1,24 @@
+{
+  "name": "mztools-usage",
+  "version": "1.0.0",
+  "description": "Web Tools Management, Account Management, Wallet Management, Retro Management",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mzcoder-hub/mztools-usage.git"
+  },
+  "keywords": [
+    "Web",
+    "Tools",
+    "Management"
+  ],
+  "author": "MzCoder-Hub",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/mzcoder-hub/mztools-usage/issues"
+  },
+  "homepage": "https://github.com/mzcoder-hub/mztools-usage#readme"
+}
