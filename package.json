@@ -1,5 +1,5 @@
 {
-  "name": "mztools-usage",
+  "name": "@mzcoder/mztools-usage",
   "version": "1.0.0",
   "description": "Web Tools Management, Account Management, Wallet Management, Retro Management",
   "main": "index.js",
@@ -20,5 +20,11 @@
   "bugs": {
     "url": "https://github.com/mzcoder-hub/mztools-usage/issues"
   },
-  "homepage": "https://github.com/mzcoder-hub/mztools-usage#readme"
+  "homepage": "https://github.com/mzcoder-hub/mztools-usage#readme",
+  "dependencies": {
+    "i": "^0.3.7",
+    "mztools-usage": "^1.0.0",
+    "npm": "^10.5.0"
+  },
+  "devDependencies": {}
 }
