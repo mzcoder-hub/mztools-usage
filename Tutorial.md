@@ -1,487 +1,502 @@
-# Membership Tutorial With Nodejs and Nextjs
+Berikut adalah langkah-langkah dan potongan kode untuk membuat aplikasi sederhana menggunakan Golang, Gin Gonic, GORM, dan JWT untuk fitur yang Anda sebutkan:
 
-Let's create the backend and frontend to ensure they are well-structured, and ensure that each API endpoint is in its own file. We'll also implement validation to ensure that only the owner of a license can manage it.
+### 1. **Setup Project**
+Buat folder untuk proyek Anda, misalnya `hris-app`. Di dalam folder ini, buat struktur seperti berikut:
 
-### Backend
+```
+hris-app/
+├── main.go
+├── config/
+│   └── database.go
+├── controllers/
+│   ├── authController.go
+│   ├── employeeController.go
+│   └── attendanceController.go
+├── models/
+│   ├── employee.go
+│   ├── user.go
+│   └── attendance.go
+├── middlewares/
+│   └── jwtMiddleware.go
+└── routes/
+    └── routes.go
+```
 
-1. **Project Structure:**
-   ```
-   membership-system/
-   ├── node_modules/
-   ├── prisma/
-   │   ├── migrations/
-   │   └── schema.prisma
-   ├── src/
-   │   ├── controllers/
-   │   │   ├── authController.js
-   │   │   ├── licenseController.js
-   │   │   └── billingController.js
-   │   ├── middlewares/
-   │   │   └── authMiddleware.js
-   │   ├── routes/
-   │   │   ├── authRoutes.js
-   │   │   ├── licenseRoutes.js
-   │   │   └── billingRoutes.js
-   │   ├── server.js
-   │   └── utils/
-   │       └── prismaClient.js
-   ├── .env
-   ├── package.json
-   └── package-lock.json
-   ```
+### 2. **Setup `main.go`**
 
-2. **Setup Prisma Client (src/utils/prismaClient.js):**
-   ```javascript
-   const { PrismaClient } = require('@prisma/client');
-   const prisma = new PrismaClient();
-   module.exports = prisma;
-   ```
+```go
+package main
 
-3. **Auth Middleware (src/middlewares/authMiddleware.js):**
-   ```javascript
-   const jwt = require('jsonwebtoken');
+import (
+	"github.com/gin-gonic/gin"
+	"hris-app/config"
+	"hris-app/routes"
+)
 
-   const authenticateToken = (req, res, next) => {
-     const token = req.headers['authorization'];
-     if (!token) return res.sendStatus(401);
+func main() {
+	r := gin.Default()
 
-     jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-       if (err) return res.sendStatus(403);
-       req.user = user;
-       next();
-     });
-   };
+	// Setup database connection
+	config.SetupDatabase()
 
-   module.exports = authenticateToken;
-   ```
+	// Setup routes
+	routes.SetupRoutes(r)
 
-4. **Auth Controller (src/controllers/authController.js):**
-   ```javascript
-   const prisma = require('../utils/prismaClient');
-   const bcrypt = require('bcryptjs');
-   const jwt = require('jsonwebtoken');
+	r.Run(":8080") // Run on port 8080
+}
+```
 
-   const register = async (req, res) => {
-     const { email, password } = req.body;
-     const hashedPassword = await bcrypt.hash(password, 10);
-     try {
-       const user = await prisma.user.create({
-         data: { email, password: hashedPassword },
-       });
-       res.status(201).json(user);
-     } catch (error) {
-       res.status(400).json({ error: 'User already exists' });
-     }
-   };
+### 3. **Setup Database Connection (`config/database.go`)**
 
-   const login = async (req, res) => {
-     const { email, password } = req.body;
-     const user = await prisma.user.findUnique({ where: { email } });
-     if (!user || !(await bcrypt.compare(password, user.password))) {
-       return res.status(401).json({ error: 'Invalid credentials' });
-     }
-     const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '1h' });
-     res.json({ token });
-   };
+```go
+package config
 
-   module.exports = { register, login };
-   ```
+import (
+	"fmt"
+	"log"
+	"os"
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
+	"hris-app/models"
+)
 
-5. **License Controller (src/controllers/licenseController.js):**
-   ```javascript
-   const prisma = require('../utils/prismaClient');
+var DB *gorm.DB
 
-   const activateLicense = async (req, res) => {
-     const { key, maxDevices } = req.body;
-     try {
-       const license = await prisma.license.create({
-         data: { key, userId: req.user.userId, maxDevices },
-       });
-       res.status(201).json(license);
-     } catch (error) {
-       res.status(400).json({ error: 'License activation failed' });
-     }
-   };
+func SetupDatabase() {
+	dsn := "user:password@tcp(127.0.0.1:3306)/hris?charset=utf8mb4&parseTime=True&loc=Local"
+	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
+	if err != nil {
+		log.Fatalf("Failed to connect to database: %v", err)
+	}
 
-   const validateLicense = async (req, res) => {
-     const { key } = req.body;
-     const license = await prisma.license.findUnique({ where: { key } });
-     if (!license || !license.isActive) {
-       return res.status(401).json({ error: 'Invalid or inactive license' });
-     }
-     res.json({ license });
-   };
+	// Migrate the schema
+	err = db.AutoMigrate(&models.Employee{}, &models.User{}, &models.Attendance{})
+	if err != nil {
+		log.Fatalf("Failed to migrate database: %v", err)
+	}
 
-   const manageLicense = async (req, res) => {
-     const { key, maxDevices, isActive } = req.body;
-     const license = await prisma.license.findUnique({ where: { key } });
-     if (license.userId !== req.user.userId) {
-       return res.status(403).json({ error: 'Not authorized to manage this license' });
-     }
-     try {
-       const updatedLicense = await prisma.license.update({
-         where: { key },
-         data: { maxDevices, isActive },
-       });
-       res.json(updatedLicense);
-     } catch (error) {
-       res.status(400).json({ error: 'License management failed' });
-     }
-   };
+	DB = db
+	fmt.Println("Database connection established.")
+}
+```
 
-   module.exports = { activateLicense, validateLicense, manageLicense };
-   ```
+### 4. **Models (`models/employee.go`, `models/user.go`, `models/attendance.go`)**
 
-6. **Billing Controller (src/controllers/billingController.js):**
-   ```javascript
-   const prisma = require('../utils/prismaClient');
+#### `models/employee.go`
+```go
+package models
 
-   const createBilling = async (req, res) => {
-     const { amount } = req.body;
-     try {
-       const billing = await prisma.billing.create({
-         data: { userId: req.user.userId, amount, status: 'pending' },
-       });
-       res.status(201).json(billing);
-     } catch (error) {
-       res.status(400).json({ error: 'Billing creation failed' });
-     }
-   };
+import (
+	"gorm.io/gorm"
+)
 
-   const updateBilling = async (req, res) => {
-     const { id, status } = req.body;
-     const billing = await prisma.billing.findUnique({ where: { id } });
-     if (billing.userId !== req.user.userId) {
-       return res.status(403).json({ error: 'Not authorized to update this billing' });
-     }
-     try {
-       const updatedBilling = await prisma.billing.update({
-         where: { id },
-         data: { status },
-       });
-       res.json(updatedBilling);
-     } catch (error) {
-       res.status(400).json({ error: 'Billing update failed' });
-     }
-   };
+type Employee struct {
+	gorm.Model
+	FirstName   string `json:"first_name"`
+	LastName    string `json:"last_name"`
+	Photo       string `json:"photo"`
+	Contact     string `json:"contact"`
+	Education   string `json:"education"`
+	Certification string `json:"certification"`
+	Experience  string `json:"experience"`
+	Position    string `json:"position"`
+	Department  string `json:"department"`
+	UserID      uint   `json:"user_id"`
+}
+```
 
-   module.exports = { createBilling, updateBilling };
-   ```
+#### `models/user.go`
+```go
+package models
 
-7. **Routes (src/routes/authRoutes.js):**
-   ```javascript
-   const express = require('express');
-   const { register, login } = require('../controllers/authController');
-   const router = express.Router();
+import (
+	"gorm.io/gorm"
+)
 
-   router.post('/register', register);
-   router.post('/login', login);
+type User struct {
+	gorm.Model
+	Username  string    `json:"username" gorm:"unique"`
+	Password  string    `json:"password"`
+	Employee  Employee  `json:"employee"`
+}
+```
 
-   module.exports = router;
-   ```
+#### `models/attendance.go`
+```go
+package models
 
-   **Routes (src/routes/licenseRoutes.js):**
-   ```javascript
-   const express = require('express');
-   const { activateLicense, validateLicense, manageLicense } = require('../controllers/licenseController');
-   const authenticateToken = require('../middlewares/authMiddleware');
-   const router = express.Router();
+import (
+	"gorm.io/gorm"
+)
 
-   router.post('/activate', authenticateToken, activateLicense);
-   router.post('/validate', validateLicense);
-   router.post('/manage', authenticateToken, manageLicense);
+type Attendance struct {
+	gorm.Model
+	EmployeeID uint   `json:"employee_id"`
+	CheckIn    string `json:"check_in"`
+	CheckOut   string `json:"check_out"`
+	LeaveType  string `json:"leave_type"`
+	LeaveStatus string `json:"leave_status"`
+}
+```
 
-   module.exports = router;
-   ```
+### 5. **Controllers**
 
-   **Routes (src/routes/billingRoutes.js):**
-   ```javascript
-   const express = require('express');
-   const { createBilling, updateBilling } = require('../controllers/billingController');
-   const authenticateToken = require('../middlewares/authMiddleware');
-   const router = express.Router();
+#### `controllers/authController.go`
+```go
+package controllers
 
-   router.post('/create', authenticateToken, createBilling);
-   router.post('/update', authenticateToken, updateBilling);
+import (
+	"net/http"
+	"github.com/gin-gonic/gin"
+	"hris-app/config"
+	"hris-app/models"
+	"hris-app/utils"
+	"golang.org/x/crypto/bcrypt"
+)
 
-   module.exports = router;
-   ```
+func Register(c *gin.Context) {
+	var user models.User
+	if err := c.ShouldBindJSON(&user); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 
-8. **Server Setup (src/server.js):**
-   ```javascript
-   const express = require('express');
-   const dotenv = require('dotenv');
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	user.Password = string(hashedPassword)
 
-   dotenv.config();
+	if err := config.DB.Create(&user).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
 
-   const authRoutes = require('./routes/authRoutes');
-   const licenseRoutes = require('./routes/licenseRoutes');
-   const billingRoutes = require('./routes/billingRoutes');
+	c.JSON(http.StatusOK, gin.H{"message": "User registered successfully"})
+}
 
-   const app = express();
-   app.use(express.json());
+func Login(c *gin.Context) {
+	var input struct {
+		Username string `json:"username"`
+		Password string `json:"password"`
+	}
 
-   app.use('/api/auth', authRoutes);
-   app.use('/api/license', licenseRoutes);
-   app.use('/api/billing', billingRoutes);
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 
-   const PORT = process.env.PORT || 3000;
-   app.listen(PORT, () => {
-     console.log(`Server running on port ${PORT}`);
-   });
-   ```
+	var user models.User
+	if err := config.DB.Where("username = ?", input.Username).First(&user).Error; err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
+		return
+	}
 
-9. **Run the Server:**
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(input.Password)); err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
+		return
+	}
+
+	token, err := utils.GenerateJWT(user.ID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"token": token})
+}
+```
+
+#### `controllers/employeeController.go`
+```go
+package controllers
+
+import (
+	"net/http"
+	"github.com/gin-gonic/gin"
+	"hris-app/config"
+	"hris-app/models"
+)
+
+func CreateEmployee(c *gin.Context) {
+	var employee models.Employee
+	if err := c.ShouldBindJSON(&employee); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := config.DB.Create(&employee).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"employee": employee})
+}
+
+func GetEmployees(c *gin.Context) {
+	var employees []models.Employee
+	if err := config.DB.Find(&employees).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"employees": employees})
+}
+```
+
+#### `controllers/attendanceController.go`
+```go
+package controllers
+
+import (
+	"net/http"
+	"github.com/gin-gonic/gin"
+	"hris-app/config"
+	"hris-app/models"
+)
+
+func RecordAttendance(c *gin.Context) {
+	var attendance models.Attendance
+	if err := c.ShouldBindJSON(&attendance); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := config.DB.Create(&attendance).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"attendance": attendance})
+}
+
+func GetAttendances(c *gin.Context) {
+	var attendances []models.Attendance
+	if err := config.DB.Find(&attendances).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"attendances": attendances})
+}
+```
+
+### 6. **JWT Middleware (`middlewares/jwtMiddleware.go`)**
+
+```go
+package middlewares
+
+import (
+	"net/http"
+	"github.com/gin-gonic/gin"
+	"hris-app/utils"
+)
+
+func JWTAuthMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		err := utils.ValidateJWT(c)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+			c.Abort()
+			return
+		}
+		c.Next()
+	}
+}
+```
+
+### 7. **JWT Utility (`utils/jwt.go`)**
+
+```go
+package utils
+
+import (
+	"fmt"
+	"net/http"
+	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v4"
+)
+
+var jwtKey = []byte("secret_key")
+
+type Claims struct {
+	UserID uint `json:"user_id"`
+	jwt.StandardClaims
+}
+
+func GenerateJWT(userID uint) (string, error) {
+	expirationTime := time.Now().Add(24 * time.Hour)
+	claims := &Claims{
+		UserID: userID,
+		StandardClaims: jwt.StandardClaims{
+			ExpiresAt: expirationTime.Unix(),
+		},
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return token.SignedString(jwtKey)
+}
+
+func ValidateJWT(c *gin.Context) error {
+	tokenStr := c.Request.Header.Get("Authorization")
+	claims := &Claims{}
+
+	token, err := jwt.ParseWithClaims(tokenStr, claims, func(token *jwt.Token) (interface{}, error) {
+		return jwtKey, nil
+	})
+
+	if err != nil || !token.Valid {
+		return fmt.Errorf("invalid token")
+	}
+
+	c.Set("user_id", claims.UserID)
+	return nil
+}
+```
+
+### 8. **Setup Routes (`routes/routes.go`)**
+
+```go
+package routes
+
+
+
+import (
+	"github.com/gin-gonic/gin"
+	"hris-app/controllers"
+	"hris-app/middlewares"
+)
+
+func SetupRoutes(r *gin.Engine) {
+	r.POST("/register", controllers.Register)
+	r.POST("/login", controllers.Login)
+
+	auth := r.Group("/")
+	auth.Use(middlewares.JWTAuthMiddleware())
+	{
+		auth.POST("/employees", controllers.CreateEmployee)
+		auth.GET("/employees", controllers.GetEmployees)
+
+		auth.POST("/attendance", controllers.RecordAttendance)
+		auth.GET("/attendance", controllers.GetAttendances)
+	}
+}
+```
+
+### 9. **Run the Application**
+Setelah semua file diatur, Anda dapat menjalankan aplikasi dengan perintah berikut di terminal:
+
+```bash
+go mod init hris-app
+go mod tidy
+go run main.go
+```
+
+Aplikasi ini akan berjalan di `http://localhost:8080`. Anda dapat menguji endpoint seperti `/register`, `/login`, `/employees`, dan `/attendance` menggunakan tools seperti Postman.
+
+### Catatan:
+- Jangan lupa untuk mengganti `user:password` pada string koneksi database sesuai dengan konfigurasi MySQL lokal Anda.
+- `jwtKey` sebaiknya diubah ke kunci yang lebih aman untuk aplikasi produksi.
+- Penggunaan `bcrypt` untuk hashing password memastikan keamanan yang lebih baik.
+
+Ini adalah template dasar yang bisa Anda kembangkan lebih lanjut sesuai kebutuhan rumah sakit.
+
+
+Untuk menggunakan PostgreSQL sebagai database, Anda perlu melakukan beberapa penyesuaian pada proyek yang telah saya berikan. Berikut adalah langkah-langkah untuk menyesuaikan koneksi database dan skema untuk PostgreSQL.
+
+### 1. **Setup Database Connection (`config/database.go`)**
+
+Ubah koneksi database di `config/database.go` untuk menggunakan PostgreSQL:
+
+```go
+package config
+
+import (
+	"fmt"
+	"log"
+	"os"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
+	"hris-app/models"
+)
+
+var DB *gorm.DB
+
+func SetupDatabase() {
+	// Format dsn PostgreSQL
+	dsn := "host=localhost user=your_username password=your_password dbname=hris port=5432 sslmode=disable TimeZone=Asia/Jakarta"
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	if err != nil {
+		log.Fatalf("Failed to connect to database: %v", err)
+	}
+
+	// Migrate the schema
+	err = db.AutoMigrate(&models.Employee{}, &models.User{}, &models.Attendance{})
+	if err != nil {
+		log.Fatalf("Failed to migrate database: %v", err)
+	}
+
+	DB = db
+	fmt.Println("Database connection established.")
+}
+```
+
+### 2. **Install PostgreSQL Driver**
+
+Pastikan Anda telah menginstal driver PostgreSQL untuk GORM. Jika belum, tambahkan dependensi berikut dalam proyek Anda dengan menjalankan perintah ini di terminal:
+
+```bash
+go get -u gorm.io/driver/postgres
+```
+
+### 3. **Menyesuaikan `main.go`**
+
+`main.go` akan tetap sama seperti sebelumnya, tetapi pastikan bahwa Anda telah mengkonfigurasi `SetupDatabase` untuk PostgreSQL.
+
+### 4. **Skema Models**
+
+Model-model (`models/employee.go`, `models/user.go`, `models/attendance.go`) tidak memerlukan perubahan khusus untuk PostgreSQL, karena GORM akan secara otomatis menyesuaikan tipe data untuk PostgreSQL berdasarkan struktur model yang Anda tentukan.
+
+### 5. **Database Setup di PostgreSQL**
+
+Pastikan Anda telah membuat database PostgreSQL yang akan digunakan:
+
+1. Masuk ke PostgreSQL:
    ```bash
-   npx prisma generate
-   nodemon src/server.js
+   psql -U your_username
    ```
 
-### Frontend with Next.js
-
-1. **Project Structure:**
-   ```
-   admin-panel/
-   ├── node_modules/
-   ├── pages/
-   │   ├── api/
-   │   │   ├── users.js
-   │   │   ├── licenses.js
-   │   │   └── billings.js
-   │   ├── admin/
-   │   │   ├── index.js
-   │   │   ├── users.js
-   │   │   ├── licenses.js
-   │   │   └── billings.js
-   ├── prisma/
-   │   └── schema.prisma
-   ├── public/
-   ├── styles/
-   ├── .env
-   ├── package.json
-   └── package-lock.json
+2. Buat database baru:
+   ```sql
+   CREATE DATABASE hris;
    ```
 
-2. **Install Dependencies:**
-   ```bash
-   npm install @prisma/client axios swr bootstrap react-bootstrap
+3. Berikan hak akses yang sesuai kepada pengguna:
+   ```sql
+   GRANT ALL PRIVILEGES ON DATABASE hris TO your_username;
    ```
 
-3. **Configure Bootstrap:**
-   Edit `pages/_app.js` to include Bootstrap CSS:
-   ```javascript
-   import 'bootstrap/dist/css/bootstrap.min.css';
+### 6. **Run the Application**
 
-   function MyApp({ Component, pageProps }) {
-     return <Component {...pageProps} />;
-   }
+Setelah semua diatur, jalankan aplikasi dengan:
 
-   export default MyApp;
-   ```
+```bash
+go run main.go
+```
 
-4. **API Routes in Next.js:**
-   Create `pages/api/users.js`:
-   
-   ```javascript
-   import { PrismaClient } from '@prisma/client';
+Aplikasi sekarang akan terhubung ke database PostgreSQL yang Anda buat dan menggunakan PostgreSQL untuk menyimpan data.
 
-   const prisma = new PrismaClient();
+### 7. **Testing**
 
-   export default async function handler(req, res) {
-     if (req.method === 'GET') {
-       const users = await prisma.user.findMany();
-       res.json(users);
-     }
-   }
-   ```
+Anda dapat menggunakan alat seperti Postman untuk menguji endpoint seperti `/register`, `/login`, `/employees`, dan `/attendance`.
 
-   Create `pages/api/licenses.js`:
-   ```javascript
-   import { PrismaClient } from '@prisma/client';
+### Catatan Tambahan
 
-   const prisma = new PrismaClient();
+- **`sslmode=disable`** digunakan untuk pengembangan lokal. Dalam produksi, Anda mungkin ingin mengaktifkan SSL untuk keamanan.
+- Sesuaikan `TimeZone=Asia/Jakarta` sesuai dengan zona waktu Anda.
+- Jangan lupa untuk mengganti `your_username` dan `your_password` dengan kredensial PostgreSQL Anda yang sebenarnya.
 
-   export default async function handler(req, res) {
-     if (req.method === 'GET') {
-       const licenses = await prisma.license.findMany();
-       res.json(licenses);
-     }
-   }
-   ```
-
-   Create `pages/api/billings.js`:
-   ```javascript
-   import { PrismaClient } from '@prisma/client';
-
-   const prisma = new PrismaClient();
-
-   export default async function handler(req, res) {
-     if (req.method === 'GET') {
-       const billings = await prisma.billing.findMany();
-       res.json(billings);
-     }
-   }
-   ```
-
-6. **Admin Panel Pages:**
-
-   **Admin Dashboard (pages/admin/index.js):**
-   ```javascript
-   import Link from 'next/link';
-   import { Container, Nav, Navbar } from 'react-bootstrap';
-
-   export default function Admin() {
-     return (
-       <Container>
-         <Navbar bg="light" expand="lg">
-           <Navbar.Brand href="#home">Admin Panel</Navbar.Brand>
-           <Navbar.Toggle aria-controls="basic-navbar-nav" />
-           <Navbar.Collapse id="basic-navbar-nav">
-             <Nav className="mr-auto">
-               <Nav.Link href="/admin/users">Manage Users</Nav.Link>
-               <Nav.Link href="/admin/licenses">Manage Licenses</Nav.Link>
-               <Nav.Link href="/admin/billings">Manage Billings</Nav.Link>
-             </Nav>
-           </Navbar.Collapse>
-         </Navbar>
-         <h1>Welcome to Admin Panel</h1>
-         <p>Select a section to manage</p>
-       </Container>
-     );
-   }
-   ```
-
-   **Manage Users (pages/admin/users.js):**
-   ```javascript
-   import useSWR from 'swr';
-   import axios from 'axios';
-   import { Container, Table } from 'react-bootstrap';
-
-   const fetcher = url => axios.get(url).then(res => res.data);
-
-   export default function ManageUsers() {
-     const { data: users, error } = useSWR('/api/users', fetcher);
-
-     if (error) return <div>Failed to load</div>;
-     if (!users) return <div>Loading...</div>;
-
-     return (
-       <Container>
-         <h2>Manage Users</h2>
-         <Table striped bordered hover>
-           <thead>
-             <tr>
-               <th>#</th>
-               <th>Email</th>
-               <th>Created At</th>
-             </tr>
-           </thead>
-           <tbody>
-             {users.map(user => (
-               <tr key={user.id}>
-                 <td>{user.id}</td>
-                 <td>{user.email}</td>
-                 <td>{new Date(user.createdAt).toLocaleString()}</td>
-               </tr>
-             ))}
-           </tbody>
-         </Table>
-       </Container>
-     );
-   }
-   ```
-
-   **Manage Licenses (pages/admin/licenses.js):**
-   ```javascript
-   import useSWR from 'swr';
-   import axios from 'axios';
-   import { Container, Table } from 'react-bootstrap';
-
-   const fetcher = url => axios.get(url).then(res => res.data);
-
-   export default function ManageLicenses() {
-     const { data: licenses, error } = useSWR('/api/licenses', fetcher);
-
-     if (error) return <div>Failed to load</div>;
-     if (!licenses) return <div>Loading...</div>;
-
-     return (
-       <Container>
-         <h2>Manage Licenses</h2>
-         <Table striped bordered hover>
-           <thead>
-             <tr>
-               <th>#</th>
-               <th>Key</th>
-               <th>User ID</th>
-               <th>Max Devices</th>
-               <th>Active</th>
-             </tr>
-           </thead>
-           <tbody>
-             {licenses.map(license => (
-               <tr key={license.id}>
-                 <td>{license.id}</td>
-                 <td>{license.key}</td>
-                 <td>{license.userId}</td>
-                 <td>{license.maxDevices}</td>
-                 <td>{license.isActive ? 'Yes' : 'No'}</td>
-               </tr>
-             ))}
-           </tbody>
-         </Table>
-       </Container>
-     );
-   }
-   ```
-
-   **Manage Billings (pages/admin/billings.js):**
-   ```javascript
-   import useSWR from 'swr';
-   import axios from 'axios';
-   import { Container, Table } from 'react-bootstrap';
-
-   const fetcher = url => axios.get(url).then(res => res.data);
-
-   export default function ManageBillings() {
-     const { data: billings, error } = useSWR('/api/billings', fetcher);
-
-     if (error) return <div>Failed to load</div>;
-     if (!billings) return <div>Loading...</div>;
-
-     return (
-       <Container>
-         <h2>Manage Billings</h2>
-         <Table striped bordered hover>
-           <thead>
-             <tr>
-               <th>#</th>
-               <th>User ID</th>
-               <th>Amount</th>
-               <th>Status</th>
-               <th>Created At</th>
-             </tr>
-           </thead>
-           <tbody>
-             {billings.map(billing => (
-               <tr key={billing.id}>
-                 <td>{billing.id}</td>
-                 <td>{billing.userId}</td>
-                 <td>{billing.amount}</td>
-                 <td>{billing.status}</td>
-                 <td>{new Date(billing.createdAt).toLocaleString()}</td>
-               </tr>
-             ))}
-           </tbody>
-         </Table>
-       </Container>
-     );
-   }
-   ```
-
-7. **Run Next.js Project:**
-   ```bash
-   npm run dev
-   ```
-
-With these updates, the backend and frontend are well-organized, with separate files for each feature and validation to ensure that only license owners can manage their licenses. The admin panel uses Bootstrap for the UI and has separate pages for managing users, licenses, and billings.
+Dengan mengikuti langkah-langkah di atas, Anda dapat menjalankan aplikasi HRIS menggunakan PostgreSQL sebagai database back-end.
