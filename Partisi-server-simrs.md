@@ -15,13 +15,13 @@ Jika Anda memiliki **dua HDD (894.253 GB)** dan server digunakan untuk **program
 
 | Partisi      | Ukuran       | Mount Point | Filesystem | Keterangan                              |
 |--------------|--------------|-------------|------------|------------------------------------------|
-| `/boot`      | 500 MB       | /boot       | Ext4       | Untuk file boot loader.                  |
-| `Swap`       | 8 GB         | Swap        | Swap       | Untuk menggantikan/mendukung RAM.        |
+| `/boot`      | 1 GB       | /boot       | Ext4       | Untuk file boot loader.                  |
+| `Swap`       | 10 GB         | Swap        | Swap       | Untuk menggantikan/mendukung RAM.        |
 | `/` (root)   | 50 GB        | /           | Ext4       | Sistem operasi utama dan aplikasi.       |
 | `/home`      | 100 GB       | /home       | Ext4       | Untuk data pengguna/server administrator.|
-| `/var`       | 200 GB       | /var        | Ext4       | Untuk file log, cache aplikasi.          |
-| `/tmp`       | 10 GB        | /tmp        | Ext4/tmpfs | Untuk file sementara aplikasi.           |
-| Sisa ruang   | 525 GB       | /srv        | Ext4       | Untuk file aplikasi SIMRS (jika perlu).  |
+| `/var`       | 350 GB       | /var        | Ext4       | Untuk file log, cache aplikasi.          |
+| `/tmp`       | 15 GB        | /tmp        | Ext4/tmpfs | Untuk file sementara aplikasi.           |
+| Sisa ruang   | 367 GB       | /srv        | Ext4       | Untuk file aplikasi SIMRS (jika perlu).  |
 
 #### **Disk 2 (Database)**
 - Fokus untuk menyimpan database dan file penting lainnya.
