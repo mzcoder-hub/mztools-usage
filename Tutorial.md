@@ -50,4 +50,4 @@ Fitur **HRIS (Human Resource Information System)** biasanya dirancang untuk mend
 - **Reimbursement**: Proses klaim penggantian biaya.
 - **Tracking Biaya Perjalanan Dinas**: Kelola pengeluaran perjalanan dinas.
 
-Fitur yang diimplementasikan tergantung pada kebutuhan perusahaan dan ukuran organisasi. Apakah Anda ingin fokus pada fitur tertentu untuk perusahaan Anda?
+Fitur yang diimplementasikan tergantung pada kebutuhan perusahaan dan ukuran organisasi.
