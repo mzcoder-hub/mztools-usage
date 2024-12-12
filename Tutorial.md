@@ -1,53 +1,58 @@
-Fitur **HRIS (Human Resource Information System)** biasanya dirancang untuk mendukung berbagai fungsi terkait pengelolaan sumber daya manusia. Berikut adalah beberapa fitur utama yang biasanya tersedia dalam sistem HRIS:
+Berikut adalah fitur utama **HRIS (Human Resources Information System)** yang dapat diterapkan di rumah sakit seperti RS Ki Ageng Sedayu untuk mendukung operasional HR secara efisien:  
 
-### **1. Manajemen Karyawan**
-- **Database Karyawan**: Informasi lengkap tentang data karyawan (nama, alamat, kontak, posisi, dll.).
-- **Organizational Chart**: Visualisasi struktur organisasi.
-- **Tracking Status**: Status aktif/non-aktif, kontrak, dan pengelolaan tenaga kerja.
+### 1. **Manajemen Data Karyawan**
+   - Informasi lengkap karyawan (profil, kontak, posisi, unit kerja, jadwal kerja).
+   - Penyimpanan dokumen karyawan (kontrak kerja, ijazah, sertifikasi, dll).
+   - Riwayat jabatan, pelatihan, dan penilaian kinerja.
 
-### **2. Pengelolaan Rekrutmen**
-- **Posting Lowongan Kerja**: Membuat dan mengelola iklan pekerjaan.
-- **Tracking Pelamar**: Sistem pelacakan status pelamar (ATS - Applicant Tracking System).
-- **Screening dan Penjadwalan Wawancara**: Alat bantu untuk menyaring kandidat dan mengatur jadwal wawancara.
+### 2. **Manajemen Rekrutmen dan Onboarding**
+   - Fitur untuk pengelolaan lowongan kerja, aplikasi lamaran, dan tracking kandidat.
+   - Alur onboarding terintegrasi untuk karyawan baru, termasuk checklist dokumen dan orientasi.
 
-### **3. Manajemen Kehadiran**
-- **Absensi dan Timesheet**: Pelacakan kehadiran, jam kerja, dan lembur.
-- **Integrasi Mesin Fingerprint/Face Recognition**: Sinkronisasi dengan perangkat absensi fisik.
-- **Cuti dan Izin**: Pengajuan dan persetujuan cuti/izin secara online.
+### 3. **Penjadwalan dan Absensi**
+   - Jadwal kerja dan shift rumah sakit (fleksibel untuk jadwal 24 jam).
+   - Sistem absensi berbasis fingerprint atau face recognition.
+   - Penghitungan lembur otomatis sesuai shift karyawan.
 
-### **4. Payroll (Penggajian)**
-- **Perhitungan Gaji**: Mengelola penghitungan gaji, tunjangan, dan potongan.
-- **Slip Gaji Digital**: Distribusi slip gaji secara otomatis.
-- **Integrasi Pajak**: Penghitungan PPh 21 dan laporan pajak terkait.
-- **BPJS dan Asuransi**: Pengelolaan iuran BPJS Kesehatan, Ketenagakerjaan, dan program lainnya.
+### 4. **Manajemen Gaji (Payroll)**
+   - Perhitungan gaji otomatis berdasarkan jam kerja, lembur, dan tunjangan.
+   - Potongan pajak, BPJS, dan asuransi karyawan.
+   - Slip gaji digital yang mudah diakses.
 
-### **5. Manajemen Kinerja**
-- **Penilaian Kinerja**: Sistem evaluasi berbasis KPI (Key Performance Indicators).
-- **Feedback dan Review**: Catatan dan umpan balik dari atasan dan kolega.
-- **Training dan Pengembangan**: Jadwal dan pelacakan pelatihan.
+### 5. **Manajemen Cuti dan Izin**
+   - Pengajuan cuti/izin secara online.
+   - Monitoring hak cuti dan sisa cuti karyawan.
+   - Otomatisasi persetujuan cuti oleh atasan.
 
-### **6. Manajemen Karyawan Baru (Onboarding)**
-- **Proses Onboarding**: Pengelolaan dokumen, pelatihan awal, dan pengenalan perusahaan.
-- **Checklist Dokumen**: Memastikan dokumen yang diperlukan telah lengkap.
+### 6. **Evaluasi dan Penilaian Kinerja**
+   - Alat penilaian kinerja karyawan berbasis indikator kinerja (KPI).
+   - Feedback dari atasan dan rekan kerja.
+   - Dokumentasi hasil evaluasi kinerja untuk promosi atau pelatihan.
 
-### **7. Kepatuhan dan Legalitas**
-- **Manajemen Dokumen**: Penyimpanan kontrak kerja, surat perjanjian, dan dokumen hukum lainnya.
-- **Peringatan Kedaluwarsa**: Notifikasi untuk kontrak yang mendekati masa habis.
+### 7. **Pelatihan dan Pengembangan**
+   - Manajemen jadwal pelatihan, seminar, atau workshop.
+   - Riwayat pelatihan karyawan dan sertifikasi.
+   - E-learning atau modul pelatihan digital.
 
-### **8. Self-Service Karyawan**
-- **Portal Karyawan**: Untuk melihat data diri, pengajuan cuti, klaim, dan lainnya.
-- **Mobile Access**: Aplikasi HRIS berbasis mobile.
+### 8. **Manajemen Kepatuhan dan Kedisiplinan**
+   - Pelaporan pelanggaran disiplin kerja.
+   - Alur tindakan korektif atau sanksi sesuai peraturan rumah sakit.
+   - Monitoring kehadiran dan perilaku karyawan.
 
-### **9. Laporan dan Analitik**
-- **Laporan SDM**: Statistik kehadiran, performa, turnover, dan data lainnya.
-- **Analitik**: Insight untuk membantu pengambilan keputusan strategis.
+### 9. **Pengelolaan Dokumen Legal**
+   - Kontrak kerja dan perpanjangan otomatis.
+   - Dokumen peraturan perusahaan, perjanjian kerja bersama, dan SOP HR.
 
-### **10. Integrasi dengan Sistem Lain**
-- **ERP (Enterprise Resource Planning)**: Integrasi dengan sistem lain di perusahaan.
-- **Sistem Keuangan**: Untuk laporan keuangan terkait HR.
+### 10. **Laporan dan Analitik**
+   - Statistik karyawan (turnover, kehadiran, produktivitas).
+   - Data untuk audit atau pelaporan ke dinas terkait.
+   - Analitik prediktif untuk kebutuhan SDM di masa depan.
 
-### **11. Manajemen Pengeluaran Karyawan**
-- **Reimbursement**: Proses klaim penggantian biaya.
-- **Tracking Biaya Perjalanan Dinas**: Kelola pengeluaran perjalanan dinas.
+### 11. **Self-Service Karyawan**
+   - Portal untuk karyawan mengakses informasi pribadi, mengajukan cuti, melihat jadwal, atau slip gaji.
+   - Formulir online untuk pengajuan administrasi lainnya.
 
-Fitur yang diimplementasikan tergantung pada kebutuhan perusahaan dan ukuran organisasi.
+### 12. **Integrasi Sistem**
+   - Integrasi dengan sistem lain, seperti SIMRS (Sistem Informasi Manajemen Rumah Sakit), BPJS, atau software accounting.
+
+Fitur-fitur tersebut dapat disesuaikan dengan kebutuhan operasional rumah sakit dan peraturan yang berlaku, seperti PP tentang ketenagakerjaan atau pedoman standar pelayanan di fasilitas kesehatan.
