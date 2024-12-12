@@ -1,4 +1,4 @@
-Berikut adalah fitur utama **HRIS (Human Resources Information System)** yang dapat diterapkan di rumah sakit seperti RS Ki Ageng Sedayu untuk mendukung operasional HR secara efisien:  
+Fitur utama **HRIS (Human Resources Information System)** yang dapat diterapkan di rumah sakit seperti RS Ki Ageng Sedayu untuk mendukung operasional HR secara efisien:  
 
 ### 1. **Manajemen Data Karyawan**
    - Informasi lengkap karyawan (profil, kontak, posisi, unit kerja, jadwal kerja).
