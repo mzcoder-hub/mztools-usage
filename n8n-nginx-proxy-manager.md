@@ -69,6 +69,8 @@ Start NPM:
 ```bash
 docker compose up -d
 ```
+http://IP:81
+(Default: admin@example.com / changeme — change after login!)
 
 ---
 
