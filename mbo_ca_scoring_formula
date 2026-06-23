@@ -1,0 +1,155 @@
+# Rumus Final Score MBO + CA
+
+Dokumen ini menjelaskan cara hitung final score pada halaman MBO appraisal.
+
+## Rumus utama
+
+```text
+Final Score = (MBO Score × 70%) + (CA Score × 30%)
+```
+
+atau:
+
+```text
+Final Score = (MBO Score × 0.7) + (CA Score × 0.3)
+```
+
+## Komponen nilai
+
+### 1. MBO Score
+
+`MBO Score` adalah nilai akhir MBO sebelum digabung dengan CA.
+
+Kontribusi MBO ke final score:
+
+```text
+MBO Contribution = MBO Score × 0.7
+```
+
+### 2. CA Score
+
+`CA Score` adalah nilai akhir CA sebelum digabung dengan MBO.
+
+Kontribusi CA ke final score:
+
+```text
+CA Contribution = CA Score × 0.3
+```
+
+## Contoh hitung
+
+### Contoh 1: MBO 4.00, CA 4.00
+
+```text
+MBO Contribution = 4.00 × 0.7 = 2.80
+CA Contribution  = 4.00 × 0.3 = 1.20
+
+Final Score = 2.80 + 1.20 = 4.00
+```
+
+Tampilan seharusnya:
+
+```text
+Total: 2.8 + 1.2
+Final Score: 4.00
+Grade: A
+```
+
+### Contoh 2: MBO 4.00, CA 3.50
+
+```text
+MBO Contribution = 4.00 × 0.7 = 2.80
+CA Contribution  = 3.50 × 0.3 = 1.05
+
+Final Score = 2.80 + 1.05 = 3.85
+```
+
+Tampilan seharusnya:
+
+```text
+Total: 2.8 + 1.1
+Final Score: 3.85
+Grade: A
+```
+
+### Contoh 3: MBO 4.00, CA belum terbaca
+
+```text
+MBO Contribution = 4.00 × 0.7 = 2.80
+CA Contribution  = 0.00 × 0.3 = 0.00
+
+Final Score = 2.80 + 0.00 = 2.80
+```
+
+Tampilan:
+
+```text
+Total: 2.8 + 0.0
+Final Score: 2.80
+Grade: B
+```
+
+Kalau CA sebenarnya sudah ada nilai, tapi masih muncul `+ 0.0`, berarti data CA belum terbaca oleh final summary.
+
+## Rumus grade
+
+Grade dihitung dari `Final Score` gabungan MBO + CA.
+
+```text
+Final Score >= 4.5  → S
+Final Score >= 3.5  → A
+Final Score >= 2.5  → B
+Final Score >= 1.5  → C
+Final Score <  1.5  → D
+```
+
+## Cara baca tampilan
+
+Format tampilan:
+
+```text
+Total: <MBO Contribution> + <CA Contribution>
+Final Score: <MBO Contribution + CA Contribution>
+Grade: <grade dari Final Score>
+```
+
+Contoh:
+
+```text
+Total: 2.8 + 1.2
+Final Score: 4.00
+Grade: A
+```
+
+Artinya:
+
+```text
+MBO Score = 4.00
+CA Score  = 4.00
+Final Score = (4.00 × 0.7) + (4.00 × 0.3) = 4.00
+```
+
+## Catatan implementasi saat ini
+
+Final summary perlu membaca CA score dari:
+
+1. `final_average_score`, kalau tersedia.
+2. Jika `final_average_score` kosong/null, hitung fallback dari `ca_items`.
+
+Fallback CA score mengambil score item dengan prioritas:
+
+```text
+second_appraiser_score → first_appraiser_score → self_score
+```
+
+Lalu dihitung weighted average berdasarkan `weight` tiap CA item:
+
+```text
+CA Score = sum(score × weight) / sum(weight)
+```
+
+Jika weight kosong semua, fallback ke rata-rata biasa:
+
+```text
+CA Score = sum(score) / jumlah item yang punya score
+```
