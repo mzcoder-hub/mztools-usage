@@ -110,3 +110,63 @@ GET /api/performance-management/department-approvers?target_user_id=<user_id>
 
 Setelah semua row override karyawan dihapus, `hasOverride` kembali `false` dan
 group-rule aktif lagi.
+
+---
+
+# Step-by-step via UI (Portal)
+
+Halaman: **Dashboard → Performance Management → Department Approvers**
+(`/dashboard/performance-management/department-approvers`).
+
+## A. Membuat override (Appraiser 1 & 2) untuk karyawan
+
+1. Klik tombol **"Add Approver"** (kanan atas tabel).
+2. Di field **"Assignment Type"**, pilih **"Specific employee (override)"**.
+   (Default-nya "Group rule" — wajib diganti ke Specific.)
+3. **"Specific Employees (appraised)"** — ketik nama / employee ID karyawan yang
+   di-appraise, klik hasilnya. Bisa pilih **banyak karyawan** sekaligus (muncul
+   sebagai chip; klik ✕ untuk hapus). Semua karyawan terpilih akan dapat appraiser
+   1 & 2 yang sama.
+4. **"Appraiser 1 (First — MBO + CA)"** — cari & pilih user appraiser 1.
+5. **"Appraiser 2 (Final — MBO only)"** — cari & pilih user appraiser 2.
+   > Isi **kedua-duanya**. Lihat gotcha di atas: begitu override dibuat, group-rule
+   > untuk karyawan itu mati total; level yang tak diisi jadi **null**.
+6. Klik **"Assign"**. Muncul toast "Appraisers saved successfully".
+
+Efek langsung: fetch MBO karyawan berikutnya, `first_appraiser` & `second_appraiser`
+terisi; appraiser melihat MBO di list approval-nya. Tak perlu regen MBO.
+
+## B. Mengubah / melengkapi override yang sudah ada
+
+1. Di tabel, cari baris karyawan — ditandai badge kuning **"Specific: <nama>"**.
+2. Klik ikon **pensil (Edit)** di baris itu.
+3. Modal terbuka dengan Appraiser 1 & 2 saat ini ter-load. Ubah:
+   - Ganti appraiser → cari user baru.
+   - **Kosongkan** appraiser (klik ✕) → level itu **dihapus** saat disimpan.
+4. Klik **"Update"**.
+
+> Edit mode meng-upsert kedua level untuk satu karyawan. Mengosongkan appraiser 1
+> menghapus row level 1 → appraiser 1 kembali null (group-rule tetap TIDAK aktif
+> selama masih ada row override level lain).
+
+## C. Menghapus override (kembali ke group-rule)
+
+1. Di baris "Specific: <nama>", klik ikon **hapus (trash)**.
+2. Konfirmasi di dialog "Remove Approver".
+3. Ulangi untuk level 1 dan level 2 (dua baris terpisah). Setelah **semua** row
+   override karyawan hilang, group-rule normal aktif lagi.
+
+## D. Bulk lewat Import Excel (banyak karyawan)
+
+Untuk volume besar, pakai **"Import"** (kanan atas):
+
+1. Klik **"Export"** dulu untuk ambil template / lihat format kolom, atau pakai
+   template dari endpoint template.
+2. Isi baris override, upload via **"Import"**.
+3. Format kolom mengikuti `DepartmentApproverTemplateExport` — set kolom target
+   employee + appraiser + level.
+
+## Verifikasi via UI
+
+- Baris karyawan muncul dengan badge **"Specific: <nama>"** dan level yang benar.
+- Buka MBO karyawan (Performance Management → MBO) — kolom appraiser terisi.
